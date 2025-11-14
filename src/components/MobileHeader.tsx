@@ -1,5 +1,6 @@
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface MobileHeaderProps {
   title: string;
@@ -22,15 +23,18 @@ export const MobileHeader = ({ title, onMenuClick, onNotificationsClick }: Mobil
         
         <h1 className="text-lg font-bold text-foreground">{title}</h1>
         
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onNotificationsClick}
-          className="text-foreground relative"
-        >
-          <Bell className="w-6 h-6" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-emergency rounded-full" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onNotificationsClick}
+            className="text-foreground relative"
+          >
+            <Bell className="w-6 h-6" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-emergency rounded-full" />
+          </Button>
+        </div>
       </div>
     </header>
   );
