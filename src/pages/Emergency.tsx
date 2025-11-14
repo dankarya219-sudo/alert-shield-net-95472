@@ -14,7 +14,8 @@ const Emergency = () => {
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [emergencyPassword, setEmergencyPassword] = useState<string | null>(null);
-  const [gestureEnabled, setGestureEnabled] = useState(false);
+  const [shakeGestureEnabled, setShakeGestureEnabled] = useState(false);
+  const [powerButtonGestureEnabled, setPowerButtonGestureEnabled] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -30,19 +31,21 @@ const Emergency = () => {
 
     const { data } = await supabase
       .from("profiles")
-      .select("emergency_password, emergency_gesture_enabled")
+      .select("emergency_password, emergency_gesture_enabled, power_button_gesture_enabled")
       .eq("id", user.id)
       .single();
 
     if (data) {
       setEmergencyPassword(data.emergency_password);
-      setGestureEnabled(data.emergency_gesture_enabled || false);
+      setShakeGestureEnabled(data.emergency_gesture_enabled || false);
+      setPowerButtonGestureEnabled(data.power_button_gesture_enabled || false);
     }
   };
 
   // Gesture detection
   useGestureDetection({
-    enabled: gestureEnabled,
+    shakeEnabled: shakeGestureEnabled,
+    powerButtonEnabled: powerButtonGestureEnabled,
     onGestureDetected: () => {
       if (!isEmergencyActive) {
         setShowConfirmDialog(true);

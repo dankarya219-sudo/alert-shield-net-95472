@@ -16,7 +16,8 @@ const EmergencySettings = () => {
   const { toast } = useToast();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [gestureEnabled, setGestureEnabled] = useState(false);
+  const [shakeGestureEnabled, setShakeGestureEnabled] = useState(false);
+  const [powerButtonGestureEnabled, setPowerButtonGestureEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -30,12 +31,13 @@ const EmergencySettings = () => {
 
     const { data, error } = await supabase
       .from("profiles")
-      .select("emergency_gesture_enabled")
+      .select("emergency_gesture_enabled, power_button_gesture_enabled")
       .eq("id", user.id)
       .single();
 
     if (!error && data) {
-      setGestureEnabled(data.emergency_gesture_enabled || false);
+      setShakeGestureEnabled(data.emergency_gesture_enabled || false);
+      setPowerButtonGestureEnabled(data.power_button_gesture_enabled || false);
     }
   };
 
@@ -89,7 +91,7 @@ const EmergencySettings = () => {
     }
   };
 
-  const handleToggleGesture = async (enabled: boolean) => {
+  const handleToggleShakeGesture = async (enabled: boolean) => {
     if (!user) return;
 
     // Check if password is set first
@@ -118,15 +120,63 @@ const EmergencySettings = () => {
 
       if (error) throw error;
 
-      setGestureEnabled(enabled);
+      setShakeGestureEnabled(enabled);
       toast({
-        title: enabled ? "Gesture Enabled" : "Gesture Disabled",
+        title: enabled ? "Shake Gesture Enabled" : "Shake Gesture Disabled",
         description: enabled 
           ? "Shake your phone 3 times to trigger emergency mode"
-          : "Gesture detection has been disabled",
+          : "Shake gesture detection has been disabled",
       });
     } catch (error) {
-      console.error("Error toggling gesture:", error);
+      console.error("Error toggling shake gesture:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update gesture setting",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTogglePowerButtonGesture = async (enabled: boolean) => {
+    if (!user) return;
+
+    // Check if password is set first
+    const { data } = await supabase
+      .from("profiles")
+      .select("emergency_password")
+      .eq("id", user.id)
+      .single();
+
+    if (!data?.emergency_password) {
+      toast({
+        title: "Password Required",
+        description: "Please set an emergency password first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ power_button_gesture_enabled: enabled })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      setPowerButtonGestureEnabled(enabled);
+      toast({
+        title: enabled ? "Power Button Gesture Enabled" : "Power Button Gesture Disabled",
+        description: enabled 
+          ? "Press power button 3 times to trigger emergency mode"
+          : "Power button gesture detection has been disabled",
+      });
+    } catch (error) {
+      console.error("Error toggling power button gesture:", error);
       toast({
         title: "Error",
         description: "Failed to update gesture setting",
@@ -202,20 +252,34 @@ const EmergencySettings = () => {
               <div>
                 <CardTitle>Gesture Detection</CardTitle>
                 <CardDescription>
-                  Automatically trigger emergency mode by shaking your phone
+                  Automatically trigger emergency mode with gestures
                 </CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Shake Gesture */}
             <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
               <div>
-                <p className="font-medium text-foreground">Enable Gesture</p>
+                <p className="font-medium text-foreground">Shake Gesture</p>
                 <p className="text-sm text-muted-foreground">Shake phone 3 times quickly</p>
               </div>
               <Switch
-                checked={gestureEnabled}
-                onCheckedChange={handleToggleGesture}
+                checked={shakeGestureEnabled}
+                onCheckedChange={handleToggleShakeGesture}
+                disabled={loading}
+              />
+            </div>
+
+            {/* Power Button Gesture */}
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted">
+              <div>
+                <p className="font-medium text-foreground">Power Button</p>
+                <p className="text-sm text-muted-foreground">Press power button 3 times quickly</p>
+              </div>
+              <Switch
+                checked={powerButtonGestureEnabled}
+                onCheckedChange={handleTogglePowerButtonGesture}
                 disabled={loading}
               />
             </div>
@@ -223,7 +287,7 @@ const EmergencySettings = () => {
             <div className="p-4 rounded-lg border border-warning/20 bg-warning/5">
               <h4 className="font-medium text-warning mb-2">How it works</h4>
               <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
-                <li>Shake your phone 3 times quickly</li>
+                <li>Trigger with shake or power button (3 times quickly)</li>
                 <li>A confirmation dialog will appear</li>
                 <li>Enter your emergency password to confirm you're safe</li>
                 <li>If no response in 2min 30sec, emergency mode activates automatically</li>

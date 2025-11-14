@@ -1,13 +1,16 @@
 import { useEffect, useCallback, useState } from "react";
 
 interface GestureDetectionOptions {
-  enabled: boolean;
+  shakeEnabled: boolean;
+  powerButtonEnabled: boolean;
   onGestureDetected: () => void;
 }
 
-export const useGestureDetection = ({ enabled, onGestureDetected }: GestureDetectionOptions) => {
+export const useGestureDetection = ({ shakeEnabled, powerButtonEnabled, onGestureDetected }: GestureDetectionOptions) => {
   const [shakeCount, setShakeCount] = useState(0);
   const [lastShakeTime, setLastShakeTime] = useState(0);
+  const [powerButtonCount, setPowerButtonCount] = useState(0);
+  const [lastPowerButtonTime, setLastPowerButtonTime] = useState(0);
 
   const handleShake = useCallback(() => {
     const now = Date.now();
@@ -31,8 +34,31 @@ export const useGestureDetection = ({ enabled, onGestureDetected }: GestureDetec
     }
   }, [shakeCount, lastShakeTime, onGestureDetected]);
 
+  const handlePowerButton = useCallback(() => {
+    const now = Date.now();
+    const timeDiff = now - lastPowerButtonTime;
+
+    // Reset if more than 2 seconds between presses
+    if (timeDiff > 2000) {
+      setPowerButtonCount(1);
+      setLastPowerButtonTime(now);
+      return;
+    }
+
+    const newCount = powerButtonCount + 1;
+    setPowerButtonCount(newCount);
+    setLastPowerButtonTime(now);
+
+    // Trigger emergency if pressed 3 times quickly
+    if (newCount >= 3) {
+      setPowerButtonCount(0);
+      onGestureDetected();
+    }
+  }, [powerButtonCount, lastPowerButtonTime, onGestureDetected]);
+
+  // Shake detection
   useEffect(() => {
-    if (!enabled || typeof window === 'undefined') return;
+    if (!shakeEnabled || typeof window === 'undefined') return;
 
     let lastX = 0, lastY = 0, lastZ = 0;
     let lastUpdate = 0;
@@ -79,7 +105,24 @@ export const useGestureDetection = ({ enabled, onGestureDetected }: GestureDetec
     return () => {
       window.removeEventListener('devicemotion', handleDeviceMotion);
     };
-  }, [enabled, handleShake]);
+  }, [shakeEnabled, handleShake]);
 
-  return { shakeCount };
+  // Power button detection (using visibility API as proxy)
+  useEffect(() => {
+    if (!powerButtonEnabled || typeof document === 'undefined') return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        handlePowerButton();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [powerButtonEnabled, handlePowerButton]);
+
+  return { shakeCount, powerButtonCount };
 };
