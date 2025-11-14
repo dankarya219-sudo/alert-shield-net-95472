@@ -45,6 +45,7 @@ const Settings = () => {
       title: "Safety",
       items: [
         { icon: Shield, label: "Device Security", description: "Anti-theft & data backup", path: "/device-security" },
+        { icon: Shield, label: "Emergency Settings", description: "Set emergency password & gesture", path: "/emergency-settings" },
         { icon: Shield, label: "Emergency Contacts", description: "Add trusted contacts", path: null },
         { icon: MapPin, label: "Location Settings", description: "Control sharing preferences", path: null },
       ]

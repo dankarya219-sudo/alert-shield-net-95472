@@ -1,17 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BottomNav } from "@/components/BottomNav";
 import { EmergencyButton } from "@/components/EmergencyButton";
+import { EmergencyConfirmDialog } from "@/components/EmergencyConfirmDialog";
 import { Phone, MessageSquare, Camera, Mic } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useGestureDetection } from "@/hooks/useGestureDetection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 const Emergency = () => {
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [emergencyPassword, setEmergencyPassword] = useState<string | null>(null);
+  const [gestureEnabled, setGestureEnabled] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Load emergency settings
+  useEffect(() => {
+    if (user) {
+      loadEmergencySettings();
+    }
+  }, [user]);
+
+  const loadEmergencySettings = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("emergency_password, emergency_gesture_enabled")
+      .eq("id", user.id)
+      .single();
+
+    if (data) {
+      setEmergencyPassword(data.emergency_password);
+      setGestureEnabled(data.emergency_gesture_enabled || false);
+    }
+  };
+
+  // Gesture detection
+  useGestureDetection({
+    enabled: gestureEnabled,
+    onGestureDetected: () => {
+      if (!isEmergencyActive) {
+        setShowConfirmDialog(true);
+      }
+    },
+  });
 
   const handleEmergencyActivate = async () => {
     if (!user) return;
@@ -107,6 +144,13 @@ const Emergency = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <EmergencyConfirmDialog
+        open={showConfirmDialog}
+        onConfirm={handleEmergencyActivate}
+        onCancel={() => setShowConfirmDialog(false)}
+        savedPassword={emergencyPassword}
+      />
+      
       <MobileHeader
         title="Emergency"
         onMenuClick={() => {}}
