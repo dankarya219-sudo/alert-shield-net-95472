@@ -1,6 +1,7 @@
 import { Bell, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import logo from "@/assets/logo.png";
 
 interface MobileHeaderProps {
   title: string;
@@ -21,7 +22,9 @@ export const MobileHeader = ({ title, onMenuClick, onNotificationsClick }: Mobil
           <Menu className="w-6 h-6" />
         </Button>
         
-        <h1 className="text-lg font-bold text-foreground">{title}</h1>
+        <div className="flex items-center gap-2">
+          <img src={logo} alt="SafeGuard Nigeria" className="h-8 w-auto" />
+        </div>
         
         <div className="flex items-center gap-1">
           <ThemeToggle />
