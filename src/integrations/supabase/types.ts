@@ -403,25 +403,34 @@ export type Database = {
         Row: {
           created_at: string | null
           emergency_contact: string | null
+          emergency_gesture_enabled: boolean | null
+          emergency_password: string | null
           full_name: string | null
           id: string
           phone_number: string | null
+          power_button_gesture_enabled: boolean | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           emergency_contact?: string | null
+          emergency_gesture_enabled?: boolean | null
+          emergency_password?: string | null
           full_name?: string | null
           id: string
           phone_number?: string | null
+          power_button_gesture_enabled?: boolean | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           emergency_contact?: string | null
+          emergency_gesture_enabled?: boolean | null
+          emergency_password?: string | null
           full_name?: string | null
           id?: string
           phone_number?: string | null
+          power_button_gesture_enabled?: boolean | null
           updated_at?: string | null
         }
         Relationships: []
@@ -521,6 +530,39 @@ export type Database = {
           ended_at?: string | null
           id?: string
           started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      threat_assessments: {
+        Row: {
+          alert_contacts: boolean
+          created_at: string
+          id: string
+          location_data: Json
+          recommendations: string[]
+          threat_level: string
+          threats: string[]
+          user_id: string
+        }
+        Insert: {
+          alert_contacts?: boolean
+          created_at?: string
+          id?: string
+          location_data: Json
+          recommendations: string[]
+          threat_level: string
+          threats: string[]
+          user_id: string
+        }
+        Update: {
+          alert_contacts?: boolean
+          created_at?: string
+          id?: string
+          location_data?: Json
+          recommendations?: string[]
+          threat_level?: string
+          threats?: string[]
           user_id?: string
         }
         Relationships: []
